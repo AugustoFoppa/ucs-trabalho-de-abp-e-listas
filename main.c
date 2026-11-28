@@ -1,11 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-
-typedef struct lista_nodo {
-    char nome[50];
-    struct lista_nodo *prox;
-} lista_nodo;
+#include <string.h>
 
 typedef struct arvore_nodo {
     char nome[50];
@@ -13,23 +8,76 @@ typedef struct arvore_nodo {
 } arvore_nodo;
 
 
+typedef struct lista_nodo {
+    char nome[50];
+    struct lista_nodo *prox;
+    struct arvore_nodo *atleta;
+
+} lista_nodo;
+
 
 /*
  *  ESPORTES
  */
     //permite a inserção de um esporte.
 void insere_esporte(lista_nodo **init, char esporte[]) {
+    lista_nodo *novo = (lista_nodo*) malloc(sizeof(lista_nodo));
+    strcpy(novo->nome, esporte);
+    novo->prox = NULL;
+    novo->atleta = NULL;
 
+    if(*init == NULL) {
+        *init = novo;
+        return;
+    }
+    
+    novo->prox = *init;
+    *init = novo;
+
+    lista_nodo *aux = *init;
+    lista_nodo *ant = NULL;
+    while(aux->prox != NULL) {
+        printf("\nComparando: %s com: %s", aux->nome, aux->prox->nome);
+        if(strcmp(aux->nome, aux->prox->nome) < 0) {
+            break;
+        }
+        lista_nodo *aux2 = aux->prox;
+        aux->prox = aux->prox->prox;
+        aux2->prox = aux;
+
+        if(ant == NULL) {
+            *init = aux2;
+        } else {
+            ant->prox = aux2;
+        }
+
+        ant = aux2;
+    }
 }
 
     //retorna um esporte pelo nome.
 lista_nodo* busca_esporte(lista_nodo *init, char esporte[]) {
+    lista_nodo *aux = init;
+    while(aux != NULL) {
+        if(strcmp(aux->nome, esporte) == 0) {
+            return aux;
+        }
+        aux = aux->prox;
+    }
+
+    printf("\nNenhum esporte encontrado com nome: %s\n", esporte);
     return NULL;
 }
 
     //escreve todos os esportes.
 void listar_esportes(lista_nodo *init) {
-
+    printf("\nLista: ");
+    lista_nodo *aux = init;
+    while(aux != NULL) {
+        printf("%s - ", aux->nome);
+        aux = aux->prox;
+    }
+    printf("\n");
 }
 
     //consulta um esporte, informando sua quantidade de atletas.
@@ -48,8 +96,44 @@ void remove_esporte(lista_nodo **init, char esporte[]) {
      */
 
     //permite a inserção de um atleta em um esporte.
-void insere_atleta(lista_nodo *init, char esporte[], char atleta[]) {
+void insere_atleta(lista_nodo *init, char nome_esporte[], char nome_atleta[]) {
+    lista_nodo *esporte = busca_esporte(init, nome_esporte);
+    if(esporte == NULL) {
+        return;
+    }
+    
+    arvore_nodo *atleta = (arvore_nodo*) malloc(sizeof(arvore_nodo));
+    strcpy(atleta->nome, nome_atleta);
+    atleta->dir = NULL;
+    atleta->esq = NULL;
 
+    if(esporte->atleta == NULL) {
+        esporte->atleta = atleta;
+        return;
+    }
+    
+    arvore_nodo *aux = esporte->atleta;
+    while(aux != NULL) {
+        if(strcmp(atleta->nome, aux->nome) < 0) {
+            if(aux->esq == NULL) {
+                aux->esq = atleta;
+                return;
+            }
+            aux = aux->esq;
+            continue;
+        }
+        if(strcmp(atleta->nome, aux->nome) > 0) {
+            if(aux->dir == NULL) {
+                aux->dir = atleta;
+                return;
+            }
+            aux = aux->dir;
+            continue;
+        }
+
+        printf("\nEsse esporte ja contem esse atleta!\n");
+        return;
+    }
 }
 
     //retorna o número total de atletas.
@@ -67,14 +151,33 @@ void exibe_atletas_total(lista_nodo *init) {
 
 }
 
-    //exibe a lista dos nomes dos atletas de um esporte, em ordem alfabética (de A a Z) ou em ordem alfabética inversa (de Z a A).
-void exibe_atletas_esporte(lista_nodo *init, char esporte[]) {
 
+void exibe_atletas_esporte_loop(arvore_nodo *nodo) {
+    if(nodo == NULL) {
+        return;
+    }
+    exibe_atletas_esporte_loop(nodo->esq);
+    printf("%s - ", nodo->nome);
+    exibe_atletas_esporte_loop(nodo->dir);
+}
+    //exibe a lista dos nomes dos atletas de um esporte, em ordem alfabética (de A a Z) ou em ordem alfabética inversa (de Z a A).
+void exibe_atletas_esporte(lista_nodo *init, char nome_esporte[]) {
+    lista_nodo *esporte = busca_esporte(init, nome_esporte);
+    if(esporte == NULL) {
+        return;
+    }
+    if(esporte->atleta == NULL) {
+        printf("\nEsse esporte nao possui nenhum atleta!\n");
+    }
+    
+    printf("\nLista: ");
+    exibe_atletas_esporte_loop(esporte->atleta);
+    printf("\n");
 }
 
     //exibe os nomes dos atletas de um esporte em ordem pré-fixada.
 void percurso_prefixado (lista_nodo *init, char esporte[]) {
-
+    
 }
 
     //remove um atleta de um esporte específico.
